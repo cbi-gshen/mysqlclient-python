@@ -267,6 +267,7 @@ class BaseCursor:
             sql += v
         rows += self.execute(sql + postfix)
         print("last_row id", conn.insert_id())
+        print("tmp_last_row_id", tmp_last_row_id)
         if tmp_last_row_id:
             self.lastrowid = tmp_last_row_id
         self.rowcount = rows

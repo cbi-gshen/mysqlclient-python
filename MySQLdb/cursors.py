@@ -111,10 +111,7 @@ class BaseCursor:
         if isinstance(args, (tuple, list)):
             ret = tuple(literal(ensure_bytes(arg)) for arg in args)
         elif isinstance(args, dict):
-            ret = {
-                ensure_bytes(key): literal(ensure_bytes(val))
-                for (key, val) in args.items()
-            }
+            ret = {ensure_bytes(key): literal(ensure_bytes(val)) for (key, val) in args.items()}
         else:
             # If it's not a dictionary let's try escaping it anyways.
             # Worst case it will throw a Value error
@@ -234,20 +231,13 @@ class BaseCursor:
             q_postfix = m.group(3) or ""
             assert q_values[0] == "(" and q_values[-1] == ")"
             return self._do_execute_many(
-                q_prefix,
-                q_values,
-                q_postfix,
-                args,
-                self.max_stmt_length,
-                self._get_db().encoding,
+                q_prefix, q_values, q_postfix, args, self.max_stmt_length, self._get_db().encoding,
             )
 
         self.rowcount = sum(self.execute(query, arg) for arg in args)
         return self.rowcount
 
-    def _do_execute_many(
-        self, prefix, values, postfix, args, max_stmt_length, encoding
-    ):
+    def _do_execute_many(self, prefix, values, postfix, args, max_stmt_length, encoding):
         conn = self._get_db()
         escape = self._escape_args
         if isinstance(prefix, str):
@@ -265,6 +255,7 @@ class BaseCursor:
             v = values % escape(arg, conn)
             if len(sql) + len(v) + len(postfix) + 1 > max_stmt_length:
                 rows += self.execute(sql + postfix)
+                print(conn.insert_id())
                 sql = bytearray(prefix)
             else:
                 sql += b","
@@ -306,16 +297,11 @@ class BaseCursor:
             procname = procname.encode(db.encoding)
         if args:
             fmt = b"@_" + procname + b"_%d=%s"
-            q = b"SET %s" % b",".join(
-                fmt % (index, db.literal(arg)) for index, arg in enumerate(args)
-            )
+            q = b"SET %s" % b",".join(fmt % (index, db.literal(arg)) for index, arg in enumerate(args))
             self._query(q)
             self.nextset()
 
-        q = b"CALL %s(%s)" % (
-            procname,
-            b",".join([b"@_%s_%d" % (procname, i) for i in range(len(args))]),
-        )
+        q = b"CALL %s(%s)" % (procname, b",".join([b"@_%s_%d" % (procname, i) for i in range(len(args))]),)
         self._query(q)
         return args
 

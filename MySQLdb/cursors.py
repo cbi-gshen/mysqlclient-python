@@ -255,11 +255,11 @@ class BaseCursor:
         for arg in args:
             v = values % escape(arg, conn)
             if len(sql) + len(v) + len(postfix) + 1 > max_stmt_length:
-                if self.lastrowid:
-                    tmp_last_row_id = self.lastrowid
                 rows += self.execute(sql + postfix)
                 if tmp_last_row_id:
                     self.lastrowid = tmp_last_row_id
+                else:
+                    tmp_last_row_id = self.lastrowid
                 print("last_row id1", conn.insert_id())
                 sql = bytearray(prefix)
             else:
